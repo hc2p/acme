@@ -48,3 +48,12 @@ jobs:
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+
+      - name: Deploy to EKS via Helm
+        uses: koslib/helm-eks-action@master
+        env:
+          KUBE_CONFIG_DATA: ${{ secrets.KUBECONFIG }}
+          IMAGE_TAG: ${{ github.sha }}
+          APP_NAME: ${{ env.APP_NAME }}
+        with:
+          command: helm upgrade $APP_NAME ./infra/helm/acme --install --wait --atomic --namespace=default --set=image.tag=$IMAGE_TAG
